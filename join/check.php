@@ -1,3 +1,14 @@
+
+<?php
+
+ echo '<br>'; echo '<br>'; echo '<br>'; echo '<br>'; echo '<br>'; echo '<br>'; echo '<br>'; echo '<br>'; echo '<br>';
+
+ $nick_name = htmlspecialchars($_POST['nick_name']);
+ $email = htmlspecialchars($_POST['email']);
+ $password = htmlspecialchars($_POST['password']);
+
+?>
+
 <!DOCTYPE html>
 <html lang="ja">
   <head>
@@ -59,15 +70,15 @@
                 <!-- 登録内容を表示 -->
                 <tr>
                   <td><div class="text-center">ニックネーム</div></td>
-                  <td><div class="text-center">Seed kun</div></td>
+                  <td><div class="text-center"><?php echo $_POST['nick_name']; ?></div></td>
                 </tr>
                 <tr>
                   <td><div class="text-center">メールアドレス</div></td>
-                  <td><div class="text-center">seed@nex.com</div></td>
+                  <td><div class="text-center"><?php echo $_POST['email']; ?></div></td>
                 </tr>
                 <tr>
                   <td><div class="text-center">パスワード</div></td>
-                  <td><div class="text-center">●●●●●●●●</div></td>
+                  <td><div class="text-center">●️●️●️●️●️●️●️●️●️</div></td>
                 </tr>
                 <tr>
                   <td><div class="text-center">プロフィール画像</div></td>
@@ -76,7 +87,7 @@
               </tbody>
             </table>
 
-            <a href="index.html">&laquo;&nbsp;書き直す</a> | 
+            <a href="index.html">&laquo;&nbsp;書き直す</a> |
             <input type="submit" class="btn btn-default" value="会員登録">
           </div>
         </form>
