@@ -1,7 +1,6 @@
 <?php
-
-  //セッションを使うページに必ず入れる
   session_start();
+  //セッションを使うページに必ず入れる
   //エラー情報を保持する
   $error = array();
 
@@ -12,6 +11,8 @@
  // $error_nickname = '';
  // $error_email = '';
  // $error_password = '';
+ //タイムゾーンのエラーが出た人用
+  date_default_timezone_set('Asia/Manila'); //date関数を使っているphpに書いてあげる
 
 
  if (isset($_POST)  && !empty($_POST)){
@@ -38,13 +39,44 @@
   //エラーがない場合
   if (empty($error)) {
     //セッションに値を保存
-    $session['join'] = $_POST;
+    $_SESSION['join'] = $_POST;
 
     //check.phpに移動
     header('Location:check.php');
     exit();
   }
+
+  $fileName = $_FILES['picture_path']['name'];
+ if (!empty($fileName)) {
+  $ext = substr($fileName, -3);
+  if ($ext != 'jpg' && $ext != 'gif' && $ext != 'png') {
+    $error['picture_path'] = 'type';
+  }
+
+  //エラーがない場合
+  if (empty($error)) {
+    $picture_path = date('YmdHis').$_FILES['picture_path']['name'];
+　　var_dump($_FILES);
+    move_uploaded_file($_FILES['picture_path']['tmp_name'], '../member_picture/'.$picture_path);
+    var_dump($_FILES);
+    //セッションに値を保存
+    $_SESSION['join'] = $_POST;
+    $_SESSION['join']['picture_path'] = $picture_path;
+
+    //check.phpへ移動
+    header('Location:check.php');
+    exit();
+
+   }
+  }
  }
+
+   // 書き直し
+ if (isset($_REQUEST['action'])  && $_REQUEST['action'] == 'rewrite'){
+   $_POST = $_SESSION['join'];
+   //画像の再選択エラーメッセージを表示するために必要
+   $error['rewrite'] = true;
+   }
 
  ?>
 
@@ -106,7 +138,7 @@
     <div class="row">
       <div class="col-md-6 col-md-offset-3 content-margin-top">
         <legend>会員登録</legend>
-        <form method="post" action="" class="form-horizontal" role="form">
+        <form method="post" action="" class="form-horizontal" role="form" enctype="multipart/form-data">
           <!-- ニックネーム -->
           <div class="form-group">
             <label class="col-sm-4 control-label">ニックネーム</label>
@@ -117,7 +149,7 @@
               <input type="text" name="nick_name" class="form-control" placeholder="例： Seed kun">
               <?php } ?>
               <?php if (isset($error['nick_name']) && $error['nick_name'] == 'blank'):?>
-                <p class="error">ニックネームを入力して下さい</p>
+                <p class="error">*ニックネームを入力して下さい</p>
               <?php endif; ?>
             </div>
           </div>
@@ -131,7 +163,7 @@
               <input type="email" name="email" class="form-control" placeholder="例： seed@nex.com">
               <?php } ?>
               <?php if(isset($error['email']) && $error['email'] == 'blank'):?>
-                <p class="error">メールアドレスを入力して下さい</p>
+                <p class="error">*メールアドレスを入力して下さい</p>
               <?php endif; ?>
             </div>
           </div>
@@ -145,10 +177,10 @@
               <input type="password" name="password" class="form-control" placeholder="">
               <?php } ?>
               <?php if(isset($error['nick_name']) && $error['password'] == 'blank'):?>
-                <p class="error">パスワードを入力して下さい</p>
+                <p class="error">*パスワードを入力して下さい</p>
               <?php endif; ?>
               <?php if(isset($error['nick_name']) && $error['password'] == 'length'):?>
-                <p class="error">パスワードは４文字以上で入力して下さい</p>
+                <p class="error">*パスワードは４文字以上で入力して下さい</p>
               <?php endif; ?>
             </div>
           </div>
@@ -157,6 +189,12 @@
             <label class="col-sm-4 control-label">プロフィール写真</label>
             <div class="col-sm-8">
               <input type="file" name="picture_path" class="form-control">
+              <?php if(isset($error['picture_path']) && $error['picture_path']=='type'){ ?>
+              <p class="error">* 写真などは「,gif」「.jpg」「.png」の画像を指定して下さい。</p>
+              <?php } ?>
+              <?php if (!empty($error)): ?>
+               <p class="error">* 恐れ入りますが、画像を改めてして下さい。</p>
+              <?php endif; ?>
             </div>
           </div>
 
