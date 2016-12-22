@@ -1,6 +1,8 @@
 <?php
-  session_start();
   //セッションを使うページに必ず入れる
+  session_start();
+  //dbconnect.phpを読み込む
+  require('../dbconnect.php');
   //エラー情報を保持する
   $error = array();
 
@@ -36,15 +38,6 @@
     $error['password'] = 'length';
   }
 
-  //エラーがない場合
-  if (empty($error)) {
-    //セッションに値を保存
-    $_SESSION['join'] = $_POST;
-
-    //check.phpに移動
-    header('Location:check.php');
-    exit();
-  }
 
   $fileName = $_FILES['picture_path']['name'];
  if (!empty($fileName)) {
@@ -53,12 +46,24 @@
     $error['picture_path'] = 'type';
   }
 
+  //重複アカウントのチェック
+ if (empty($error)) {
+   $sql = sprintf('SELECT COUNT(*) AS cnt FROM `members` WHERE email="%s"', mysqli_real_escape_string($db, $_POST['email'])
+    );
+   $record = mysqli_query($db, $sql) or die(myaqli_error($db));
+   $table = mysqli_fetch_assoc($record);
+   if ($table['cnt']>0) {
+     $error['email'] = 'duplicate';
+   }
+
+ }
+
   //エラーがない場合
   if (empty($error)) {
     $picture_path = date('YmdHis').$_FILES['picture_path']['name'];
-　　var_dump($_FILES);
+    // var_dump($_FILES);
     move_uploaded_file($_FILES['picture_path']['tmp_name'], '../member_picture/'.$picture_path);
-    var_dump($_FILES);
+    // var_dump($_FILES);
     //セッションに値を保存
     $_SESSION['join'] = $_POST;
     $_SESSION['join']['picture_path'] = $picture_path;
@@ -164,6 +169,9 @@
               <?php } ?>
               <?php if(isset($error['email']) && $error['email'] == 'blank'):?>
                 <p class="error">*メールアドレスを入力して下さい</p>
+              <?php endif; ?>
+              <?php if ($error['email'] == 'duplicate'): ?>
+              <p class="error">*指定されたメールアドレスはすでに登録されています。</p>
               <?php endif; ?>
             </div>
           </div>

@@ -1,3 +1,50 @@
+<?php
+  //セッション関数使うことを宣言
+  session_start();
+  //DBを呼び出す
+  require('dbconnect.php');
+
+
+  if (isset($_SESSION['id']) && $_SESSION['time'] + 3600 > time()) {
+    //ログインしているとき
+    $_SESSION['time'] = time();
+    //sqlを取得し、ユーザーデータを取得
+    $sql = sprintf('SELECT * FROM `members` WHERE member_id=%d',
+      mysqli_real_escape_string($db, $_SESSION['id'])
+      );
+    $record = mysqli_query($db, $sql) or die(mysqli_error($db));
+    $member = mysqli_fetch_assoc($record);
+  } else {
+    // ログインしていないとき
+    header('Location:login.php');
+    exit();
+  }
+
+  //投稿を記録する(つぶやくボタンをクリックしたとき)
+  if (!empty($_POST)) {
+    if($_POST['tweet'] !=''){
+      //INSERT文を作成
+      $sql = sprintf('INSERT INTO `tweets`SET `tweet`="%s", `member_id`=%d, `reply_tweet_id`= 0, `created`=now()',
+        mysqli_real_escape_string($db, $_POST['tweet']),
+        mysqli_real_escape_string($db, $member['id'])
+        //SQLの順番はtweet(%s), member_id(％d)だからmysqliの順番もそれに合わせる。
+
+      );
+      //INSERT文実行
+      mysqli_query($db, $sql) or die(mysqli_error($db));
+
+      //SQL文実行後、画面を再度表示
+      header('Location:index.php');
+      exit();
+    }
+  }
+
+  //投稿を取得する
+  $sql = 'SELECT m.`nick_name`, m.`picture_path`, t. * FROM `tweets`t, `members`m WHERE m.member_id = t.member_id ORDER BY t.`created` DESC';
+  $tweets = mysqli_query($db, $sql) or die(mysqli_error($db));
+
+ ?>
+
 <!DOCTYPE html>
 <html lang="ja">
   <head>
@@ -33,12 +80,12 @@
                   <span class="icon-bar"></span>
                   <span class="icon-bar"></span>
               </button>
-              <a class="navbar-brand" href="index.html"><span class="strong-title"><i class="fa fa-twitter-square"></i> Seed SNS</span></a>
+              <a class="navbar-brand" href="index.php"><span class="strong-title"><i class="fa fa-twitter-square"></i> Seed SNS</span></a>
           </div>
           <!-- Collect the nav links, forms, and other content for toggling -->
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
               <ul class="nav navbar-nav navbar-right">
-                <li><a href="logout.html">ログアウト</a></li>
+                <li><a href="logout.php">ログアウト</a></li>
               </ul>
           </div>
           <!-- /.navbar-collapse -->
@@ -49,40 +96,57 @@
   <div class="container">
     <div class="row">
       <div class="col-md-4 content-margin-top">
-        <legend>ようこそ●●さん！</legend>
+        <legend>ようこそ<?php echo htmlspecialchars($member['nick_name'], ENT_QUOTES, 'UTF-8'); ?>さん！</legend>
         <form method="post" action="" class="form-horizontal" role="form">
+          <div>
+          <?php echo htmlspecialchars($member['nick_name'], ENT_QUOTES, 'UTF-8'); ?>さん、メッセージをどうぞ
+          </div>
             <!-- つぶやき -->
             <div class="form-group">
               <label class="col-sm-4 control-label">つぶやき</label>
               <div class="col-sm-8">
-                <textarea name="tweet" cols="50" rows="5" class="form-control" placeholder="例：Hello World!"></textarea>
+                <textarea name="tweet" cols="50" rows="5" class="form-control" placeholder="">
+                </textarea>
               </div>
             </div>
           <ul class="paging">
             <input type="submit" class="btn btn-info" value="つぶやく">
                 &nbsp;&nbsp;&nbsp;&nbsp;
-                <li><a href="index.html" class="btn btn-default">前</a></li>
+                <li><a href="index.php" class="btn btn-default">前</a></li>
                 &nbsp;&nbsp;|&nbsp;&nbsp;
-                <li><a href="index.html" class="btn btn-default">次</a></li>
+                <li><a href="index.php" class="btn btn-default">次</a></li>
           </ul>
         </form>
       </div>
 
       <div class="col-md-8 content-margin-top">
         <div class="msg">
-          <img src="http://c85c7a.medialib.glogster.com/taniaarca/media/71/71c8671f98761a43f6f50a282e20f0b82bdb1f8c/blog-images-1349202732-fondo-steve-jobs-ipad.jpg" width="48" height="48">
+           <img src="member_picture/me.jpg" width="48" height="48" alt="<?php echo htmlspecialchars($member['nick_name'], ENT_QUOTES, 'UTF-8'); ?>"/>
+            <p>こんにちは、<span class="name"><?php echo htmlspecialchars($member['nick_name'], ENT_QUOTES, 'UTF-8'); ?>さん</span></p>
+            [<a href="#">Re</a>]
+            </p>
+            <p class="day">
+            <a href="view.php">
+              <?php echo htmlspecialchars($member['time']) ?>
+            </a>
+             [<a href="#" style="color: #00994C;">編集</a>]
+             [<a href="#" style="color: #F33;">削除</a>]
+            </p>
+         </div>
+         <div class="msg">
+           <img src="http://c85c7a.medialib.glogster.com/taniaarca/media/71/71c8671f98761a43f6f50a282e20f0b82bdb1f8c/blog-images-1349202732-fondo-steve-jobs-ipad.jpg" width="48" height="48">
           <p>
             つぶやき４<span class="name"> (Seed kun) </span>
             [<a href="#">Re</a>]
           </p>
           <p class="day">
-            <a href="view.html">
+            <a href="view.php">
               2016-01-28 18:04
             </a>
             [<a href="#" style="color: #00994C;">編集</a>]
             [<a href="#" style="color: #F33;">削除</a>]
           </p>
-        </div>
+         </div>
         <div class="msg">
           <img src="http://c85c7a.medialib.glogster.com/taniaarca/media/71/71c8671f98761a43f6f50a282e20f0b82bdb1f8c/blog-images-1349202732-fondo-steve-jobs-ipad.jpg" width="48" height="48">
           <p>
@@ -90,7 +154,7 @@
             [<a href="#">Re</a>]
           </p>
           <p class="day">
-            <a href="view.html">
+            <a href="view.php">
               2016-01-28 18:03
             </a>
             [<a href="#" style="color: #00994C;">編集</a>]
@@ -104,7 +168,7 @@
             [<a href="#">Re</a>]
           </p>
           <p class="day">
-            <a href="view.html">
+            <a href="view.php">
               2016-01-28 18:02
             </a>
             [<a href="#" style="color: #00994C;">編集</a>]
@@ -118,7 +182,7 @@
             [<a href="#">Re</a>]
           </p>
           <p class="day">
-            <a href="view.html">
+            <a href="view.php">
               2016-01-28 18:01
             </a>
             [<a href="#" style="color: #00994C;">編集</a>]

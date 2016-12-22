@@ -1,9 +1,30 @@
 <?php
  session_start();
+ // date_default_timezone_set('Asia/Manila');。date関数を使うときはこれを書く
+ require('../dbconnect.php'); //「../」はcheck.phpの一つ上の階層にあるから必要
+
+ //セッションにデータがなかったらindex.phpへ遷移する。
  if (!isset($_SESSION['join'])) {
   header('Location:index.php');
   exit();
  }
+ //DB登録処理
+ if (!empty($_POST)) {
+   //登録処理をする
+  $sql = sprintf('INSERT INTO `members` SET `nick_name`="%s" , `email`="%s" , `password`="%s", `picture_path`="%s", `created`=now()',
+    mysqli_real_escape_string($db, $_SESSION['join']['nick_name']),
+    mysqli_real_escape_string($db, $_SESSION['join']['email']),
+    mysqli_real_escape_string($db, sha1($_SESSION['join']['password'])),
+    mysqli_real_escape_string($db, $_SESSION['join']['picture_path']));
+    // date()
+   mysqli_query($db, $sql) or die(mysqli_error($db));
+   unset($_SESSION['join']);
+   //unsetで存在自体をリセット。無限に増えてDBを圧迫するのを防ぐため.
+   header('Location:thanks.php');
+   exit();
+
+  }
+
 
 ?>
 
@@ -80,7 +101,7 @@
                 </tr>
                 <tr>
                   <td><div class="text-center">プロフィール画像</div></td>
-                  <td><div class="text-center"><img src="../member/picture/<?php echo htmlspecialchars($_SESSION['join']['picture_path'], ENT_QUOTES,'UTF-8'); ?>" width="100" height="100"></div></td>
+                  <td><div class="text-center"><img src="../member_picture/<?php echo htmlspecialchars($_SESSION['join']['picture_path'], ENT_QUOTES,'UTF-8'); ?>" width="100" height="100"></div></td>
                 </tr>
               </tbody>
             </table>
